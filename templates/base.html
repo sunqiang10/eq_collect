@@ -1,0 +1,25 @@
+
+<html>
+  <head>
+    {% if title %}
+    <title>{{title}} - microblog</title>
+    {% else %}
+    <title>主页</title>
+    {% endif %}
+    <link rel="stylesheet" href='/static/css/index.css'/>
+  </head>
+  <body>
+    <div>最新震情: <a href="/index">主页</a></div>
+    <hr>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul>
+    {% for message in messages %}
+        <li>{{ message }} </li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </body>
+</html>

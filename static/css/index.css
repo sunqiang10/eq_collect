@@ -1,0 +1,18 @@
+.row_div span{
+    font-size: 12px;
+    margin: 5px;
+    display: inline-block;
+    width: 10%;
+}
+.row_div {
+    width: 100%;
+}
+#list1 li{
+    list-style-type: decimal;
+}
+#list1 li:nth-of-type(odd){ background:#00ccff;}奇数行
+#list1 li:nth-of-type(even){ background:#ffcc00;}偶数行
+#list2 li:nth-child(4n+1){ background:#00ccff;}从第一行开始算起 每隔4个（包含第四个）使用此样式
+#list00000 li:nth-child(4n+2){background:#090;}从第二行开始算起 每隔4个（包含第四个）使用次样式
+#list00000 li:nth-child(4n+3){background:#009;}从第三行开始算起 每隔4个（包含第四个）使用次样式
+#list00000 li:nth-child(4n+4){background:#990;}从第四行开始算起 每隔4个（包含第四个）使用次样式

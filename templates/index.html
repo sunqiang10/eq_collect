@@ -1,0 +1,18 @@
+<!-- 模板的语法应当符合Jinja语法 -->
+<!-- extend from base layout -->
+{% extends "base.html" %}
+{% block content %}
+  <ul id="list1">
+    {% for eq in eqInfos%}
+        <li class="row_div">
+            <span>{{ eq.Cata_id }}</span>
+            <span>{{ eq.O_time.strftime("%Y-%m-%d %H:%M:%S") }}</span>
+            <span>{{ eq.Location_cname }}</span>
+            <span>{{ eq.M }}</span>
+            <span>{{ eq.Depth }}</span>
+            <span>{{ eq.Lon }}</span>
+            <span>{{ eq.Lat }}</span>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
