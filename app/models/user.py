@@ -13,6 +13,11 @@ class User(db.Model):
     email = db.Column(db.String(255), index=False, unique=False)
     nickname = db.Column(db.String(255), index=False, unique=False)
     sex = db.Column(db.String(255), index=False, unique=False)
+    open_id = db.Column(db.String(255), index=False, unique=False)
+    is_wx = db.Column(db.String(255), index=False, unique=False)
+    login_time = db.Column(db.String(255), index=False, unique=False)
+    tel = db.Column(db.String(255), index=False, unique=False)
+    dept = db.Column(db.String(255), index=False, unique=False)
 
     @property
     def is_authenticated(self):
@@ -32,13 +37,3 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-
-class Post(db.Model):
-    __tablename__ = "posts"
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def __repr__(self):
-        return '<Post %r>' % self.body

@@ -4,17 +4,19 @@ from app.models.eq_info import EqInfo
 from app.models.user import User
 from app import app, db, lm, scheduler
 from .forms import LoginForm
+from app.utils import serialize
 import hashlib
-from flask import jsonify
 import logging
 import threading
 import urllib.request
 import os
 import urllib
-
+from flask_cors import cross_origin
 mylock = threading.Lock()
 
 
+
+# flask后端
 @app.route('/')
 @app.route('/index')
 @login_required
@@ -24,43 +26,33 @@ def index():
                            eqInfos=EqInfo.query.order_by(EqInfo.O_time.desc()).limit(100).all())
 
 
-@app.route('/eq_infos', methods=['GET', 'POST'])  # 第一个参数是路由，第二个是请求方法
-def eq_infos():
-    # recv_data = request.get_data()  # 得到前端传送的数据
-    recv_data = request.args.get("p")
-    page_index = request.args.get("page_index")
-    page_size = request.args.get("page_size")
-    if recv_data == '13811886617':
-        datas = EqInfo.query.order_by(EqInfo.O_time.desc()).offset((int(page_index)-1)*int(page_size))\
-            .limit(int(page_size)).all()  # 对数据做某些处理
-        db.close_all_sessions()
-        data_json = []
-        re_data_json = {'ok': '0', 'info': ''}
-        for data in datas:
-            data_json.append(serialize(data))
-        re_data_json['info'] = data_json
-        re_data_json["ok"] = 1
-        return jsonify(re_data_json)  # 返回数据
-    else:
-        return ''
-
-
-def serialize(model):
-    from sqlalchemy.orm import class_mapper
-    columns = [c.key for c in class_mapper(model.__class__).columns]
-    return dict((c, getattr(model, c)) for c in columns)
-
-
 @lm.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+@cross_origin(supports_credentials=True)
 @app.before_request
 def before_request():
+    print(session)
+    url_accept = ["/login_view", "/login", "/user/user_login"]
     g.user = current_user
+    if request.path in url_accept:
+        pass
+    else:
+        if 'username' in session:
+            pass
+        else:
+            return redirect(url_for('login_view'))
 
 
+@app.route('/login_view', methods=['GET', 'POST'])
+def login_view():
+    form = LoginForm()
+    return render_template('login.html', title="Sign In", form=form)
+
+
+# 后端flask用户登录
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if g.user is not None and g.user.is_authenticated:
@@ -75,12 +67,13 @@ def login():
         user = User.query.filter_by(username=user_name).first()
         if not user:
             flash('用户不存在.')
-            return redirect(url_for('login'))
+            return redirect(url_for('login_view'))
         if pw != user.password:
             flash('用户密码不正确.')
-            return redirect(url_for('login'))
+            return redirect(url_for('login_view'))
         else:
             login_user(user, remember=remember_me)
+            session['username'] = user.username
             return redirect(request.args.get('next') or url_for('index'))
     return render_template('login.html', title="Sign In", form=form)
 
@@ -88,9 +81,27 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
+    session.clear()
     return redirect(url_for('index'))
 
 
+# 定期清理无用图片
+def clean_img():
+    path = serialize.STATIC_FILE_PATH + 'upload' + os.sep
+    dirs = os.listdir(path)
+    for file in dirs:
+        data = db.session.execute('SELECT COUNT(1) from t_report where instr(pic_path,\''
+                                  + file + '\') > 0')
+        row = data.fetchone()  # 取第一条
+        if row[0] == 0:
+            os.remove(path+file)
+    db.close_all_sessions()
+
+
+clean_img()
+
+
+# flask后端生成震中百度地图图片
 def create_pic():
     mylock.acquire()
     try:
@@ -99,7 +110,7 @@ def create_pic():
         for data in datas:
             if data.is_create_pic == 0:
                 file_path = root_path + 'eq_collect' + os.sep + 'static' + os.sep \
-                            + 'img' + os.sep + data.Cata_id + '.png'
+                            + 'img' + os.sep + data.cata_id + '.png'
                 img_url = "http://api.map.baidu.com/staticimage?width=240&height=320&center=" \
                           + str(data.Lon) + "," + str(data.Lat) + "&zoom=8&markers=" \
                           + str(data.Lon) + "," + str(data.Lat) \
@@ -124,6 +135,7 @@ def download_img(img_url, file_path):
         return urllib.request.urlretrieve(img_url, file_path)
 
 
+# 定时任务，生成图片
 def run_task():
     scheduler.add_job(create_pic, 'cron', minute='55')
     # scheduler.add_job(create_pic, 'interval', seconds=60)

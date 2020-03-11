@@ -69,3 +69,4 @@ venv/**
 .idea/**
 __pycache__/
 static/img/
+upload/

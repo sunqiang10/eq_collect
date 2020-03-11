@@ -3,6 +3,7 @@ Click==7.0
 defusedxml==0.6.0
 Flask==1.1.1
 Flask-APScheduler==1.11.0
+Flask-Cors==3.0.8
 Flask-Login==0.5.0
 Flask-SQLAlchemy==2.4.1
 Flask-WTF==0.14.3
@@ -10,6 +11,7 @@ itsdangerous==1.1.0
 Jinja2==2.11.1
 lock==2018.3.25.2110
 MarkupSafe==1.1.1
+mysql-connector==2.2.9
 PyMySQL==0.9.3
 python-dateutil==2.8.1
 python3-openid==3.1.0
