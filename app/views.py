@@ -15,7 +15,6 @@ from flask_cors import cross_origin
 mylock = threading.Lock()
 
 
-
 # flask后端
 @app.route('/')
 @app.route('/index')
@@ -35,15 +34,19 @@ def load_user(user_id):
 @app.before_request
 def before_request():
     print(session)
-    url_accept = ["/login_view", "/login", "/user/user_login"]
+    url_accept = ["/login_view", "/login", "/user/user_login", "/wx/wechat", "/wx/login4wx", "/wx/wx_login"]
     g.user = current_user
-    if request.path in url_accept:
+    ss = request.path.split('/')
+    if len(ss) > 1 and ss[1] == 'static':
         pass
     else:
-        if 'username' in session:
+        if request.path in url_accept:
             pass
         else:
-            return redirect(url_for('login_view'))
+            if 'username' in session:
+                pass
+            else:
+                return redirect(url_for('login_view'))
 
 
 @app.route('/login_view', methods=['GET', 'POST'])

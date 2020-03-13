@@ -3,6 +3,7 @@ from sqlalchemy import func
 import json
 from app import db
 from app.models.reporter import Reporter
+from app.models.user import User
 from flask import jsonify
 from app.models.eq_info import EqInfo
 import os
@@ -178,7 +179,7 @@ def update_img():
                     re_data_json["info"] = 'No selected file'
                 if file and allowed_file(file.filename):
                     old_filename = file.filename
-                    new_filename = str(int(round(time.time() * 1000))) + '.' + old_filename.split(".")[1]
+                    new_filename = str(int(round(time.time() * 1000))) + '.' + old_filename.rsplit('.', 1)[1]
                     path = serialize.STATIC_FILE_PATH + 'upload' + os.sep + new_filename
                     print(path)
                     file.save(path)
@@ -196,3 +197,32 @@ def update_img():
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in set(['jpg', 'gif', 'png', 'jpeg', 'bmp'])
+
+
+# 通过上报id查询上报数据
+@report_blue.route('/ht_reports_by_open_id', methods=['GET', 'POST'])  # 第一个参数是路由，第二个是请求方法
+def ht_reports_by_open_id():
+    open_id = request.args.get("open_id")
+    re_data_json = {'ok': '0', 'info': ''}
+    if session['username']:
+        try:
+            result = User.query.filter(User.open_id == open_id).first()
+            reports = Reporter.query.order_by(Reporter.updatetime.desc()).filter_by(user_id=int(result.id))
+            report_json =[]
+            for report in reports:
+                eq = EqInfo.query.filter_by(cata_id=report.cata_id).first()
+                report_dict = serialize.serialize_model(report)
+                eq_info = serialize.serialize_model(eq)
+                report_dict['eq'] = eq_info
+                report_json.append(report_dict)
+            db.close_all_sessions()
+            re_data_json['info'] = report_json
+            re_data_json["ok"] = 1
+            lines = json.dumps(re_data_json, cls=serialize.DateEnconding)
+            return jsonify(lines)  # 返回数据
+        except Exception as e1:
+            re_data_json['info'] = e1
+            re_data_json["ok"] = 0
+        return jsonify(re_data_json)  # 返回数据
+    else:
+        return ''

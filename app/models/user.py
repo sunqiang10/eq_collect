@@ -18,6 +18,9 @@ class User(db.Model):
     login_time = db.Column(db.String(255), index=False, unique=False)
     tel = db.Column(db.String(255), index=False, unique=False)
     dept = db.Column(db.String(255), index=False, unique=False)
+    pic_path = db.Column(db.String(255), index=False, unique=False)
+    province = db.Column(db.String(255), index=False, unique=False)
+    city = db.Column(db.String(255), index=False, unique=False)
 
     @property
     def is_authenticated(self):
